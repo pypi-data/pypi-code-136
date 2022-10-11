@@ -1,0 +1,17 @@
+"""
+Adversarial Robustness Evaluation Test Bed
+"""
+from armory.logs import log
+from armory.utils import version, typedef
+
+
+Config = typedef.Config
+
+
+def __getattr__(name):
+    if name == "__version__":
+        return version.get_version()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
+
+END_SENTINEL = "Scenario has finished running cleanly"
