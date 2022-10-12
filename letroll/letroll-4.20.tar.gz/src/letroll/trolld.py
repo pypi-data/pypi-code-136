@@ -1,0 +1,3 @@
+
+def troll_user():
+    print(f"TROLOLOLOLOLOLOLOLOLOLOLOLOLOLOLOLOLOLOLOLOL")
