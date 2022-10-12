@@ -1,0 +1,68 @@
+from django.core.cache import cache
+
+from garpix_page.utils.all_sites import get_all_sites
+
+
+class PageCacheService:
+    cache_url_prefix = 'url_page_'
+    cache_slug_prefix = 'slug_page_'
+
+    def get_url(self, pk, current_language_code_url_prefix):
+        cache_key = f'{self.cache_url_prefix}{pk}_{current_language_code_url_prefix}'
+        url_cache = cache.get(cache_key)
+        if url_cache is not None:
+            return url_cache
+        return None
+
+    def set_url(self, pk, result):
+        cache_key = f'{self.cache_url_prefix}{pk}'
+        cache.set(cache_key, result)
+
+    def get_instance_by_url(self, url):
+        cache_key = f'{self.cache_slug_prefix}{url}'
+        url_cache = cache.get(cache_key)
+        if url_cache is not None:
+            return url_cache
+        return None
+
+    def set_instance_by_url(self, url, result):
+        cache_key = f'{self.cache_slug_prefix}{url}'
+        cache.set(cache_key, result)
+
+    def set_seo_by_page(self, pk, field_name, result, site):
+        cache_key = f'page_{field_name}_{site}_{pk}'
+        cache.set(cache_key, result)
+
+    def get_seo_by_page(self, pk, field_name, site):
+        cache_key = f'page_{field_name}_{site}_{pk}'
+        seo_cache = cache.get(cache_key)
+        if seo_cache is not None:
+            return seo_cache
+        return None
+
+    def clear_seo_data(self, pk=None):
+        from garpix_page.models import BasePage
+        seo_fields = [field_name for field in BasePage._meta.get_fields() if (field_name := field.name)[:4] == 'seo_']
+        keys = []
+        if pk:
+            for seo_field in seo_fields:
+                for site in get_all_sites():
+                    keys.append(f'page_{seo_field}_{site}_{pk}')
+        else:
+            for page in BasePage.objects.all():
+                for seo_field in seo_fields:
+                    for site in get_all_sites():
+                        keys.append(f'page_{seo_field}_{site}_{page.pk}')
+
+        cache.delete_many(keys=keys)
+
+    def clear_all_by_page(self, pk, url):
+        cache.delete(f'{self.cache_url_prefix}{pk}')
+        cache.delete(f'{self.cache_slug_prefix}{url}')
+        self.clear_seo_data(pk)
+
+    def clear_all(self):
+        cache.clear()
+
+
+cache_service = PageCacheService()
