@@ -1,0 +1,76 @@
+import contextlib
+from dataclasses import dataclass, replace
+from typing import Dict, List, Optional, Tuple
+
+from aio_pika import RobustConnection as RmqConnection
+from contextvars import ContextVar
+
+from .engine import RmqStorageBackend, RmqStorageEngine
+
+
+@dataclass
+class Session:
+    engine: RmqStorageEngine
+    connection: RmqConnection
+
+
+class ConnectionContext:
+    def __init__(self):
+        self.sessions: Dict[str, Session] = dict()
+
+
+class SessionManager:
+    def __init__(self, engine_factory: RmqStorageBackend):
+        self._ctx: ContextVar[ConnectionContext] = ContextVar('_ctx', default=ConnectionContext())
+        self._engine_factory = engine_factory
+
+    def get_session(self, name: str) -> Optional[Session]:
+        return self._ctx.get().sessions.get(name)
+
+    def get_or_create_session(self, name: str) -> Tuple[bool, Optional[Session]]:
+        if conn := self.get_session(name):
+            return False, conn
+
+        if engine := self._engine_factory.get_engine(name):
+            return True, Session(
+                engine=engine,
+                connection=engine.new_connection())
+
+        return False, None
+
+    @contextlib.asynccontextmanager
+    async def async_session_context(self, name: str):
+        created, data = self.get_or_create_session(name)
+
+        if not created:
+            yield data
+            return
+
+        async with data.connection as conn:
+            data = replace(data, connection=conn)
+            yield self._add_session(name, data)
+            self._remove_session(name)
+
+    @contextlib.asynccontextmanager
+    async def init_async_engines(self, names: List[str] = None):
+        engines = self._engine_factory.get_engines(names or [])
+        async with contextlib.AsyncExitStack() as stack:
+            for name, engine in engines.items():
+                assert engine is self._engine_factory.get_engine(name)
+                if engine.is_async:
+                    await engine.async_start()
+                    stack.push_async_callback(engine.async_stop)
+                else:
+                    engine.start()
+                    stack.callback(engine.stop)
+
+                # await stack.enter_async_context(self.async_session_context(name))
+
+            yield self._ctx.get()
+
+    def _add_session(self, name: str, data: Session) -> Session:
+        self._ctx.get().sessions[name] = data
+        return data
+
+    def _remove_session(self, name: str):
+        self._ctx.get().sessions.pop(name)
