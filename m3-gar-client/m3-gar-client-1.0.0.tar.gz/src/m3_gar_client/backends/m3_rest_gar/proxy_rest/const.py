@@ -1,0 +1,6 @@
+# coding: utf-8
+
+SEARCH_PLACE_NAME = 'search-place'
+SEARCH_STREET_NAME = 'search-street'
+SEARCH_HOUSE_NAME = 'search-house'
+SEARCH_HOUSE_OR_STEAD_NAME = 'search-house-or-stead'
