@@ -1,0 +1,14 @@
+from pylovepdf_flavor.task import Task
+
+
+class Merge(Task):
+
+    def __init__(self, public_key, verify_ssl, proxies):
+
+        self.tool = 'merge'
+        super(Merge, self).__init__(public_key, True, verify_ssl, proxies)
+
+
+
+
+
