@@ -1,0 +1,115 @@
+import logging
+import os
+import pickle
+from typing import Any, Dict, Optional
+
+from yaml import safe_dump, safe_load
+
+from .api import ObjectApi
+from .local_config import getCacheDir
+from .secure_storage import calcHash
+
+logger = logging.getLogger(__name__)
+
+ALWAYS_UPLOAD_FILE_TYPES = {".pkl", ".jlib", ".joblib", ".csv", ".tsv"}
+ALWAYS_UPLOAD_FILE_SIZE = 50 * 1024
+NULL_BYTE = b"\x00"
+
+SCHEMA_VERSION = 1
+
+
+def toYaml(contentHash: str, content: bytes) -> bytes:
+  obj = {
+      "_": "MBFileStub",
+      "contentHash": contentHash,
+      "metadata": describeFile(content),
+      "schemaVersion": SCHEMA_VERSION
+  }
+  return safe_dump(obj).encode('utf-8')
+
+
+LARGE_FILE_STUB_SENTINEL = b'_: MBFileStub'
+
+
+def fromYaml(content: bytes) -> Optional[str]:
+  if not content.startswith(LARGE_FILE_STUB_SENTINEL):
+    return None
+
+  obj = safe_load(content.decode("utf-8"))
+  if type(obj) is dict and "contentHash" in obj:
+    return obj["contentHash"]
+  return None
+
+
+def describeFile(content: bytes) -> Dict[str, Any]:
+  metadata = {"file_size": len(content)}
+  if pickleDetails := getPickleInfo(content):
+    metadata.update(**pickleDetails)
+
+  return metadata
+
+
+def getPickleInfo(content: bytes) -> Optional[Dict[str, Any]]:
+  try:
+    obj = pickle.loads(content)
+    objT = type(obj)
+    return {"module": objT.__module__, "class": objT.__name__, "description": str(obj)[:1000]}
+  except Exception:
+    return {}
+
+
+def isBinaryFile(content: bytes) -> bool:
+  return NULL_BYTE in content
+
+
+def shouldUploadFile(filepath: str, content: bytes) -> bool:
+  _, ext = os.path.splitext(filepath)
+  return (ext in ALWAYS_UPLOAD_FILE_TYPES or len(content) >= ALWAYS_UPLOAD_FILE_SIZE or isBinaryFile(content))
+
+
+def stubCacheFilePath(workspaceId: str, contentHash: str) -> str:
+  contentHash = contentHash.replace(":", "_")
+  return os.path.join(getCacheDir(workspaceId, "largeFileStubs"), f"{contentHash}.yaml")
+
+
+class GitApi:
+
+  def __init__(self, workspaceId: str, objectApi: Optional[ObjectApi] = None):
+    self.workspaceId = workspaceId
+    self.api = objectApi or ObjectApi(workspaceId)
+
+  def clean(self, filepath: str, content: bytes) -> bytes:
+    if not shouldUploadFile(filepath, content):
+      logger.info(f"Ignoring {filepath}")
+      if content:
+        return content
+      return b''
+    contentHash = calcHash(content)
+    logger.info(f"Cleaning {filepath} hash={contentHash}")
+    filepath = stubCacheFilePath(self.workspaceId, contentHash)
+    if os.path.exists(filepath):  # Try cache
+      try:
+        with open(filepath, "rb") as f:
+          yamlContent = f.read()
+          if fromYaml(yamlContent) == contentHash:
+            return yamlContent
+      except Exception as e:
+        logger.info("Failed to read from cache", exc_info=e)
+
+    self.api.uploadRuntimeObject(content, contentHash, filepath)
+    yamlContent = toYaml(contentHash, content)
+    with open(filepath, "wb") as f:
+      f.write(yamlContent)
+    return yamlContent
+
+  def smudge(self, filepath: str, content: bytes) -> bytes:
+    try:
+      contentHash = fromYaml(content)
+    except Exception as e:
+      logger.info(f"Not smudging {filepath}")
+      return content
+    if contentHash is None:
+      return content
+    logger.info(f"Smudging {filepath} hash={contentHash}")
+    data = self.api.downloadRuntimeObject(contentHash, filepath)
+    return data
