@@ -1,0 +1,30 @@
+# -*- coding: utf-8 -*-
+from setuptools import setup
+
+packages = \
+['databusclient']
+
+package_data = \
+{'': ['*']}
+
+install_requires = \
+['requests>=2.28.1,<3.0.0', 'typer>=0.6.1,<0.7.0']
+
+setup_kwargs = {
+    'name': 'databusclient',
+    'version': '0.9',
+    'description': 'A simple client for submitting data to the DBpedia Databus',
+    'long_description': '# Databus Client Python\n\n## Install\n```bash\npython3 -m pip install databusclient\n```\n\n## CLI Usage\n```bash\ndatabusclient --help\n```\n\n```man\nUsage: databusclient [OPTIONS] COMMAND [ARGS]...\n\nOptions:\n  --install-completion [bash|zsh|fish|powershell|pwsh]\n                                  Install completion for the specified shell.\n  --show-completion [bash|zsh|fish|powershell|pwsh]\n                                  Show completion for the specified shell, to\n                                  copy it or customize the installation.\n  --help                          Show this message and exit.\n\nCommands:\n  deploy\n  downoad\n```\n### Deploy command\n```\ndatabusclient deploy --help\n```\n```\n\n\nUsage: databusclient deploy [OPTIONS] DISTRIBUTIONS...\n\nArguments:\n  DISTRIBUTIONS...  distributions in the form of List[URL|CV|fileext|compression|sha256sum:contentlength] where URL is the\n                    download URL and CV the key=value pairs (_ separted)\n                    content variants of a distribution, fileExt and Compression can be set, if not they are inferred from the path  [required]\n\nOptions:\n  --versionid TEXT    target databus version/dataset identifier of the form <h\n                      ttps://databus.dbpedia.org/$ACCOUNT/$GROUP/$ARTIFACT/$VE\n                      RSION>  [required]\n  --title TEXT        dataset title  [required]\n  --abstract TEXT     dataset abstract max 200 chars  [required]\n  --description TEXT  dataset description  [required]\n  --license TEXT      license (see dalicc.net)  [required]\n  --apikey TEXT       apikey  [required]\n  --help              Show this message and exit.\n```\nExample of using deploy command\n```\ndatabusclient deploy --versionid https://databus.dbpedia.org/user1/group1/artifact1/2022-05-18 --title title1 --abstract abstract1 --description description1 --license http://dalicc.net/licenselibrary/AdaptivePublicLicense10 --apikey MYSTERIOUS \'https://raw.githubusercontent.com/dbpedia/databus/master/server/app/api/swagger.yml|type=swagger\'  \n```\n\n```\ndatabusclient deploy --versionid https://dev.databus.dbpedia.org/denis/group1/artifact1/2022-05-18 --title "Client Testing" --abstract "Testing the client...." --description "Testing the client...." --license http://dalicc.net/licenselibrary/AdaptivePublicLicense10 --apikey MYSTERIOUS \'https://raw.githubusercontent.com/dbpedia/databus/master/server/app/api/swagger.yml|type=swagger\'  \n```\n\nA few more notes for CLI usage:\n\n* The content variants can be left out ONLY IF there is just one distribution\n  * For complete inferred: Just use the URL with `https://raw.githubusercontent.com/dbpedia/databus/master/server/app/api/swagger.yml`\n  * If other parameters are used, you need to leave them empty like `https://raw.githubusercontent.com/dbpedia/databus/master/server/app/api/swagger.yml||yml|7a751b6dd5eb8d73d97793c3c564c71ab7b565fa4ba619e4a8fd05a6f80ff653:367116`\n\n## Module Usage\n\n### Step 1: Create lists of distributions for the dataset\n\n```python\nfrom databusclient import create_distribution\n\n# create a list\ndistributions = []\n\n# minimal requirements\n# compression and filetype will be inferred from the path\n# this will trigger the download of the file to evaluate the shasum and content length\ndistributions.append(\n    create_distribution(url="https://raw.githubusercontent.com/dbpedia/databus/master/server/app/api/swagger.yml", cvs={"type": "swagger"})\n)\n\n# full parameters\n# will just place parameters correctly, nothing will be downloaded or inferred\ndistributions.append(\n    create_distribution(\n        url="https://example.org/some/random/file.csv.bz2", \n        cvs={"type": "example", "realfile": "false"}, \n        file_format="csv", \n        compression="bz2", \n        sha256_length_tuple=("7a751b6dd5eb8d73d97793c3c564c71ab7b565fa4ba619e4a8fd05a6f80ff653", 367116)\n    )\n)\n```\n\nA few notes:\n\n* The dict for content variants can be empty ONLY IF there is just one distribution\n* There can be no compression if there is no file format\n\n### Step 2: Create dataset\n\n```python\nfrom databusclient import createDataset\n\n# minimal way\ndataset = createDataset(\n    version_id="https://dev.databus.dbpedia.org/denis/group1/artifact1/2022-05-18",\n    title="Client Testing",\n    abstract="Testing the client....",\n    description="Testing the client....",\n    license_url="http://dalicc.net/licenselibrary/AdaptivePublicLicense10",\n    distributions=distributions,\n)\n\n# with group metadata\ndataset = createDataset(\n    version_id="https://dev.databus.dbpedia.org/denis/group1/artifact1/2022-05-18",\n    title="Client Testing",\n    abstract="Testing the client....",\n    description="Testing the client....",\n    license_url="http://dalicc.net/licenselibrary/AdaptivePublicLicense10",\n    distributions=distributions,\n    group_title="Title of group1",\n    group_abstract="Abstract of group1",\n    group_description="Description of group1"\n)\n```\n\nNOTE: To be used you need to set all group parameters, or it will be ignored\n\n### Step 3: Deploy to databus\n\n```python\nfrom databusclient import deploy\n\n# to deploy something you just need the dataset from the previous step and an APIO key\n# API key can be found (or generated) at https://$$DATABUS_BASE$$/$$USER$$#settings\ndeploy(dataset, "mysterious api key")\n```',
+    'author': 'DBpedia Association',
+    'author_email': 'None',
+    'maintainer': 'None',
+    'maintainer_email': 'None',
+    'url': 'None',
+    'packages': packages,
+    'package_data': package_data,
+    'install_requires': install_requires,
+    'python_requires': '>=3.9,<4.0',
+}
+
+
+setup(**setup_kwargs)
