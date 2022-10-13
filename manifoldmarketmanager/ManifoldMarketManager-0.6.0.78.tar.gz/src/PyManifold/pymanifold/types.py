@@ -1,0 +1,166 @@
+"""Contains the various types of data that Manifold can return."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from inspect import signature
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing import Any, Dict, Iterable, List, Literal, Mapping, Optional, Type, TypeVar, Union
+
+    from .lib import ManifoldClient
+
+    T = TypeVar("T")
+
+
+class DictDeserializable:
+    """An object which can be deserialized from a known dictionary spec."""
+
+    @classmethod
+    def from_dict(cls: Type[T], env: Dict[str, Any]) -> T:
+        """Take a dictionary and return an instance of the associated class."""
+        return cls(
+            **{k: v for k, v in env.items() if k in signature(cls).parameters}  # type: ignore
+        )
+
+
+@dataclass
+class Bet(DictDeserializable):
+    """Represents a bet."""
+
+    amount: int
+    contractId: str
+    createdTime: int
+    id: str
+
+
+@dataclass
+class Comment(DictDeserializable):
+    """Represents a comment."""
+
+    contractId: str
+    createdTime: int
+    id: str
+    text: str = ""
+
+    userId: str = ""
+    userName: str = ""
+    userAvatarUrl: str = ""
+    userUsername: str = ""
+
+
+@dataclass
+class LiteMarket(DictDeserializable):
+    """Represents a lite market."""
+
+    # Unique identifer for this market
+    id: str
+
+    # Attributes about the creator
+    creatorUsername: str
+    creatorName: str
+    createdTime: int
+    creatorAvatarUrl: Optional[str]
+
+    # Market attributes. All times are in milliseconds since epoch
+    closeTime: Optional[int]
+    question: str
+    # description: str
+    tags: List[str]
+
+    outcomeType: Literal["BINARY", "FREE_RESPONSE", "NUMERIC", "PSEUDO_NUMERIC", "MULTIPLE_CHOICE"]
+    pool: float | Mapping[str, float] | None
+    volume7Days: float
+    volume24Hours: float
+    isResolved: bool
+    description: str = ""
+    lastUpdatedTime: Optional[int] = None
+    probability: Optional[float] = None
+    resolutionTime: Optional[int] = None
+    resolution: Optional[str] = None
+    resolutionProbability: Optional[float] = None
+
+    p: Optional[float] = None
+    totalLiquidity: Optional[float] = None
+    min: Optional[float] = None
+    max: Optional[float] = None
+    isLogScale: Optional[bool] = None
+
+    # This should not be optional, once market creation returns the URL in the response.
+    # https://github.com/manifoldmarkets/manifold/issues/508
+    url: Optional[str] = None
+
+    @property
+    def slug(self) -> str:
+        """Generate the slug of a market, given it has an assigned URL."""
+        if self.url is None:
+            raise ValueError("No url set")
+        return self.url.split("/")[-1]
+
+
+@dataclass
+class Market(LiteMarket):
+    """Represents a market."""
+
+    bets: List[Bet] = field(default_factory=list)
+    comments: List[Comment] = field(default_factory=list)
+    answers: Optional[List[Dict[str, Union[str, float]]]] = None
+
+    @classmethod
+    def from_dict(cls, env: dict[str, Any]) -> 'Market':
+        """Take a dictionary and return an instance of the associated class."""
+        market = super(Market, cls).from_dict(env)
+        market.bets = [Bet.from_dict(bet) for bet in env["bets"]]
+        market.comments = [Comment.from_dict(bet) for bet in env["comments"]]
+        return market
+
+
+@dataclass
+class Group(DictDeserializable):
+    """Represents a group."""
+
+    name: str = ""
+    creatorId: str = ""
+    id: str = ""
+    contractIds: List[str] = field(default_factory=list)
+    mostRecentActivityTime: int = -1
+    anyoneCanJoin: bool = False
+    mostRecentContractAddedTime: int = -1
+    createdTime: int = -1
+    memberIds: List[str] = field(default_factory=list)
+    slug: str = ""
+    about: str = ""
+
+    def contracts(self, client: 'ManifoldClient') -> Iterable[Market]:
+        """Iterate over the markets in this group."""
+        return (client.get_market_by_id(id_) for id_ in self.contractIds)
+
+    def members(self, client: 'ManifoldClient') -> Iterable["LiteUser"]:
+        """Iterate over the users in this group."""
+        return (client.get_user(id_) for id_ in self.memberIds)
+
+
+@dataclass
+class LiteUser(DictDeserializable):
+    """Basic information about a user."""
+
+    id: str  # user's unique id
+    createdTime: float  # as usual, in ms since epoch
+
+    name: str  # display name, may contain spaces
+    username: str  # username, used in urls
+    url: str  # link to user's profile
+    avatarUrl: Optional[str] = None
+
+    bio: Optional[str] = None
+    bannerUrl: Optional[str] = None
+    website: Optional[str] = None
+    twitterHandle: Optional[str] = None
+    discordHandle: Optional[str] = None
+
+    # Note: the following are here for convenience only and may be removed in the future.
+    balance: float = 0.0
+    totalDeposits: float = 0.0
+    totalPnLCached: float = 0.0
+    creatorVolumeCached: float = 0.0
