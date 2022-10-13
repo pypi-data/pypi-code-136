@@ -1,0 +1,1 @@
+from dicom2hdf.data_generators.patients_data_generator import PatientsDataGenerator
