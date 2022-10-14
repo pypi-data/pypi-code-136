@@ -1,0 +1,13 @@
+from io import StringIO
+
+import pandas as pd
+
+EARTHQUAKES_STR = """\
+DateTime,Latitude,Longitude,Depth,Magnitude,MagType,NbStations,Gap,Distance,RMS,Source,EventID
+1967/08/01 10:33:50.47,36.08000,-121.07083,80.339,2.50,Mx,10,292,42,0.25,NCSN,1000872
+1967/08/02 02:49:12.55,35.63433,-120.75716,3.980,2.60,Mx,9,322,108,0.24,NCSN,1000887
+1967/08/03 05:55:26.73,36.37967,-121.00850,39.609,2.70,Mx,10,298,21,0.41,NCSN,1000912
+"""
+
+
+EARTHQUAKES_DF = pd.read_csv(StringIO(EARTHQUAKES_STR))
