@@ -1,0 +1,2 @@
+please = None
+thanks = None
