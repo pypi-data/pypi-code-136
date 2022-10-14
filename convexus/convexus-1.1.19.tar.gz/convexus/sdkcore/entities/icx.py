@@ -1,0 +1,1 @@
+from convexus.sdkcore.entities.currency import Icx
