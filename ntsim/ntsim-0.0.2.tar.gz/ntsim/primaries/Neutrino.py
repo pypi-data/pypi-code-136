@@ -1,0 +1,2 @@
+class Neutrino(Primary):
+    pass
