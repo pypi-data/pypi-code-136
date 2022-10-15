@@ -1,0 +1,1 @@
+from .ty import main
