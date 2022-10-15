@@ -1,0 +1,274 @@
+message = '"{quote}" - *{author}, {date}*'
+date_format = "%b %Y"
+
+categories = {
+    "random": {
+        "a": [
+            "ass", "arse", "a",
+            "anal", "analling", "aunt",
+            "anime"
+        ],
+        "b": [
+            "bouncy", "butt", "boyfriend",
+            "balls", "balling", "blowjob",
+            "breasts", "boobs", "breast",
+            "boob", "bust", "busting",
+            "boy", "bruh", "bro",
+            "brother", "bouncing", "boys",
+            "babe"
+        ],
+        "c": [
+            "crazy", "clitoris", "cum",
+            "cumming", "coming", "come",
+            "condom", "cunt", "cat"
+        ],
+        "d": [
+            "dick", "dad", "duck",
+            "ducking", "dildo", "duccy",
+            "ducc", "dumb", "dream",
+            "dreaming", "drunk", "drink",
+            "drinking", "down", "dipshit",
+            "dumbfuck", "dog"
+        ],
+        "e": [
+            "erecting", "erection", "e",
+            "ejecting", "eject", "erect"
+        ],
+        "f": [
+            "freaking", "fucking", "fancy",
+            "fingering", "freak", "fuck",
+            "fap", "fapping", "fart",
+            "farting"
+        ],
+        "g": [
+            "googly", "go", "gay",
+            "gaymer", "gaying", "gamer",
+            "gaming", "girl", "girlfriend",
+            "girls"
+        ],
+        "h": [
+            "haitch", "haitching", "haitchpea",
+            "hecking", "horny", "heck",
+            "hammer", "hammering", "h",
+            "hug"
+        ],
+        "i": [
+            "impostor", "indian", "internet",
+            "image"
+        ],
+        "j": [
+            "jerk", "jerking", "jeans"
+        ],
+        "k": [
+            "kiss", "kissing", "kissed"
+        ],
+        "l": [
+            "laughing", "laugh", "lesbian",
+            "lubricating", "left", "lick",
+            "like", "liking", "licking",
+            "live","life", "living",
+            "loud"
+        ],
+        "m": [
+            "masturbating", "masturbation", "mom",
+            "my", "meow"
+        ],
+        "n": [
+            "nipples", "nigga", "nutty",
+            "nutting", "nut", "none",
+            "null"
+        ],
+        "o": [
+            "oral", "oralling", "ovary",
+            "orgasm", "out", "ovulating",
+            "off", "owo"
+        ],
+        "p": [
+            "pea", "pee", "peeing",
+            "pp", "penis", "poop",
+            "poo", "pooping", "python",
+            "porn", "pizza", "pant",
+            "pants", "pornhub", "pog",
+            "pogger", "poggers"
+        ],
+        "q": [
+            "question", "questioning", "quiet"
+        ],
+        "r": [
+            "rainbow", "right", "rule34",
+            "redacted", "rule", "ruling"
+        ],
+        "s": [
+            "start", "starting", "sex",
+            "sexing", "sperm", "spam",
+            "semen", "squirt", "sqd",
+            "squirting", "spamming", "squid",
+            "shit", "shitting", "shut",
+            "shutting", "sister", "step-sis",
+            "step-bro", "step-sister", "step-brother",
+            "step-mom", "step-mother", "step-dad",
+            "step-father", "single"
+        ],
+        "t": [
+            "time", "timing", "tit",
+            "tits", "troll", "trolling",
+            "tasty", "taste", "tasting"
+        ],
+        "u": [
+            "urine", "urinating", "undefined",
+            "up", "uwu"
+        ],
+        "v": [
+            "vagina", "vulva", "vibrator",
+            "vibrating", "virgin", "video"
+        ],
+        "w": [
+            "wank", "wink", "wanking",
+            "winking", "work", "working",
+            "wrong", "watch", "watching",
+            "waste", "wasting"
+        ],
+        "x": [
+            "xonia"
+        ],
+        "y": [
+            "yellow", "you", "your",
+            "youtube", "youtuber"
+        ],
+        "z": [
+            "zombie", "zombieing", "zombert"
+        ]
+    },
+    "lmao/lmfao": {
+        "a": [
+            "ass", "ass", "ass",
+            "ass", "ass", "ass",
+            "ass", "ass", "arse",
+            "a", "aunt"
+        ],
+        "b": [
+            "bouncy", "bouncy", "butt",
+            "butt", "butt", "balls",
+            "boobs", "breasts", "balls",
+            "balls", "bouncing", "busting",
+            "bro", "boy", "boys"
+        ],
+        "c": [
+            "crazy", "cunt", "cumming",
+            "condom", "cum", "cum", "cum"
+        ],
+        "d": [
+            "dick", "dick", "dick",
+            "dick", "dick", "dick",
+            "dick", "dick", "dick",
+            "dad", "ducking", "ducking",
+            "ducking", "ducking", "ducking",
+            "ducking", "ducking", "ducking",
+            "duck", "duck", "duck"
+        ],
+        "e": [
+            "e", "e", "erecting",
+            "erecting", "erecting", "erecting",
+            "erecting", "erecting", "erecting",
+            "erection"
+        ],
+        "f": [
+            "fancy", "fucking", "fucking",
+            "fucking", "fucking", "fucking",
+            "fucking", "fucking", "fucking",
+            "freaking", "freaking", "fapping",
+            "fapping", "fucking", "fapping"
+        ],
+        "g": [
+            "googly","googly", "gay",
+            "gay", "gaming", "girl",
+            "girls"
+        ],
+        "h": [
+            "haitch", "h", "haitching",
+            "haitchpea", "hecking", "hecking",
+            "hecking", "hecking", "hecking",
+            "hecking", "hecking", "hecking",
+            "hecking", "hecking", "hecking",
+            "horny", "horny", "horny",
+            "horny", "horny", "horny",
+            "hammering"
+        ],
+        "i": [
+            "indian", "impostor", "indian"
+        ],
+        "j": [
+            "jerking", "jeans"
+        ],
+        "k": [
+            "kissing"
+        ],
+        "l": [
+            "laughing", "laughing", "laughing",
+            "laughing", "laughing", "laughing",
+            "laughing", "laughing", "licking",
+            "licking", "licking"
+        ],
+        "m": [
+            "my", "my", "my",
+            "my", "my", "my",
+            "my", "my", "mine"
+        ],
+        "n": [
+            "nigga", "nutting", "nutting",
+            "nut"
+        ],
+        "o": [
+            "off", "out", "owo",
+            "off", "off", "off",
+            "off", "off", "off",
+            "off", "off", "off"
+        ],
+        "p": [
+            "pizza", "pizza", "penis",
+            "penis", "penis", "penis",
+            "pants", "pants", "pants"
+        ],
+        "q": [
+            "questioning"
+        ],
+        "r": [
+            "rule34", "redacted"
+        ],
+        "s": [
+            "starting", "sex", "squirting",
+            "sexing", "squirting", "shitting"
+        ],
+        "t": [
+            "tasty", "taste", "tasting",
+            "trolling"
+        ],
+        "u": [
+            "uwu","urinating"
+        ],
+        "v": [
+            "vagina", "vibrating", "vibrating",
+            "vibrating", "vibrating", "vibrating",
+            "vibrating", "vibrating", "vibrating",
+            "vibrating"
+        ],
+        "w": [
+            "wasting", "wanking", "wanking",
+            "wanking", "wanking", "wanking",
+            "wanking", "wanking"
+        ],
+        "x": [
+            "xonia"
+        ],
+        "y": [
+            "yellow", "you", "you",
+            "your", "your", "your",
+            "your", "your", "your",
+            "your", "your", "your",
+            "your", "your", "your"
+        ],
+        "z": [
+            "zombie"
+        ]
+    }
+}
