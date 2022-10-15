@@ -1,0 +1,23 @@
+import setuptools
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name="oldschool-management-tools",                     # This is the name of the package
+    version="0.0.1",                        # The initial release version
+    author="Jim Jimson",                     # Full name of the author
+    description="Tools for oldschool managers",
+    long_description="ools for oldschool managers",      # Long description read from the the readme file
+    long_description_content_type="text/markdown",
+    packages=setuptools.find_packages(),    # List of all python modules to be installed
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],                                      # Information to filter the project on PyPi website
+    python_requires='>=3.9',                # Minimum version requirement of the package
+    py_modules=["oldschool-management-tools"],             # Name of the python package
+    package_dir={'':'oldschool-management-tools/src'},     # Directory of the source code of the package
+    install_requires=["pywin32"]              # Install other dependencies if any
+)
