@@ -1,0 +1,4 @@
+# ESTE SCRIPT CONTENDRÁ ALGO COMPLETAMENTE DISTINTO, CON UN ENFOQUE COMPLETAMENTE DISTINTO.
+
+if 'Esperar':
+    print('Muchas gracias pa! uwu')
