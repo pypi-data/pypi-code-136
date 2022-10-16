@@ -1,0 +1,2 @@
+class IpDataNotReadyException(Exception):
+    pass
