@@ -1,0 +1,1 @@
+from .gcspy import GlasgowConstraintSolver
