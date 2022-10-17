@@ -1,0 +1,2 @@
+DEFAULTS = None
+LAST_CONFIG = {}
