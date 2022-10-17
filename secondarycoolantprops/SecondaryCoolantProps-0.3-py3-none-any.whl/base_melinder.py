@@ -1,0 +1,158 @@
+from abc import abstractmethod
+from math import exp
+from typing import Tuple
+
+from scp.base_fluid import BaseFluid
+
+# Ideally the type hints would cause the coefficient returns to return this, but it is
+#  bulky and I haven't been able to get a new typing NewType to work properly, so for now
+#  they just return a plain Tuple.
+# Tuple[
+#     Tuple[float, float, float, float],
+#     Tuple[float, float, float, float],
+#     Tuple[float, float, float, float],
+#     Tuple[float, float, float],
+#     Tuple[float, float],
+#     float
+# ]
+
+
+class BaseMelinder(BaseFluid):
+    """
+    A base class for Melinder fluids that provides convenience methods
+    that can be accessed in derrived classes.
+
+    Melinder, Å. 2010. Properties of Secondary Working Fluids
+    for Indirect Systems. 2nd ed. International Institute of Refrigeration.
+    """
+
+    _ij_pairs = (
+        (0, 0), (0, 1), (0, 2), (0, 3),
+        (1, 0), (1, 1), (1, 2), (1, 3),
+        (2, 0), (2, 1), (2, 2), (2, 3),
+        (3, 0), (3, 1), (3, 2),
+        (4, 0), (4, 1),
+        (5, 0)
+    )
+
+    @abstractmethod
+    def calc_freeze_point(self, x: float) -> float:
+        """
+        Abstract method; derived classes should override to return the
+        mixture freezing point.
+
+        @param x: Concentration fraction, from 0 to 1
+        @return: Returns the mixture freezing point, Celsius
+        """
+        pass
+
+    @abstractmethod
+    def coefficient_viscosity(self) -> Tuple:
+        """
+        Abstract method; derived classes should override to return the
+        coefficient matrix for viscosity.
+        """
+        pass
+
+    @abstractmethod
+    def coefficient_specific_heat(self) -> Tuple:
+        """
+        Abstract method; derived classes should override to return the
+        coefficient matrix for specific heat.
+        """
+        pass
+
+    @abstractmethod
+    def coefficient_conductivity(self) -> Tuple:
+        """
+        Abstract method; derived classes should override to return the
+        coefficient matrix for conductivity.
+        """
+        pass
+
+    @abstractmethod
+    def coefficient_density(self) -> Tuple:
+        """
+        Abstract method; derived classes should override to return the
+        coefficient matrix for density.
+        """
+        pass
+
+    def __init__(
+        self, t_min: float, t_max: float, x: float, x_min: float, x_max: float
+    ):
+
+        """
+        A constructor for the Melinder fluid base class
+
+        @param t_min: Minimum temperature, in degrees Celsius
+        @param t_max: Maximum temperature, in degrees Celsius
+        @param x: Concentration fraction, from 0 to 1
+        @param x_min: Minimum concentration fraction, from 0 to 1
+        @param x_max: Maximum concentration fraction, from 0 to 1
+        """
+
+        super().__init__(t_min, t_max, x, x_min, x_max)
+        self.x_base = None
+        self.t_base = None
+        self.freeze_point = None
+
+    def _f_prop(self, c_arr: Tuple, temp: float) -> float:
+        """
+        General worker function to evaluate fluid properties as
+        a function of concentration and temperature.
+        """
+
+        temp = self._check_temperature(temp)
+
+        xxm = self.x_pct - self.x_base
+        yym = temp - self.t_base
+        x_xm = [xxm**p for p in range(6)]
+        y_ym = [yym**p for p in range(4)]
+
+        f_ret = 0.0
+
+        for i, j in BaseMelinder._ij_pairs:
+            f_ret += c_arr[i][j] * x_xm[i] * y_ym[j]
+
+        return f_ret
+
+    def viscosity(self, temp: float) -> float:
+        """
+        Calculate the dynamic viscosity of the mixture
+
+        @param temp: Fluid temperature, in degrees Celsius
+        @return: Dynamic viscosity, in N/m2-s, or Pa-s
+        """
+
+        return exp(self._f_prop(self.coefficient_viscosity(), temp)) / 1000.0
+
+    def specific_heat(self, temp: float) -> float:
+        """
+        Calculates the specific heat of the mixture
+
+        @param temp: Fluid temperature, in degrees Celsius
+        @return: Specific heat, in J/kg-K
+        """
+
+        return self._f_prop(self.coefficient_specific_heat(), temp)
+
+    def conductivity(self, temp: float) -> float:
+        """
+        Calculates the thermal conductivity of the mixture
+
+        @param temp: Fluid temperature, in degrees Celsius
+        @return: Thermal conductivity, in W/m-K
+        """
+
+        return self._f_prop(self.coefficient_conductivity(), temp)
+
+    def density(self, temp: float) -> float:
+        """
+        Calculates the density of the mixture
+
+        @param temp: Fluid temperature, in degrees Celsius
+        @return: Density, in kg/m3
+        """
+
+        return self._f_prop(self.coefficient_density(), temp)
