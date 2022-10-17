@@ -1,0 +1,6 @@
+PATH_OUTPUT_ROTGRIDS = 'output/grid_files/'
+PATH_OUTPUT_PT = 'output/pt_files/'
+PATH_INPUT_BASEGRO = 'input/base_gro_files/'
+PATH_OUTPUT_PLOTS = 'output/figures/'
+PATH_OUTPUT_ANIS = 'output/animations/'
+PATH_OUTPUT_STAT = 'output/statistics_files/'
