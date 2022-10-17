@@ -1,0 +1,350 @@
+import concurrent.futures
+import io
+import json
+import os
+import traceback
+from pathlib import Path
+from zipfile import ZipFile
+
+import click
+import emoji
+
+from app.application import (
+    get_app_dir_structure,
+    get_data_source_definition_files,
+    get_subdirectories,
+    DATA_SOURCE_DEF_FILE_EXT,
+)
+from app.dmss import dmss_api
+from app.import_package import (ApplicationException, import_package_tree,
+                                package_tree_from_zip)
+from app.zip_all import zip_all
+
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+
+
+@click.group(context_settings=CONTEXT_SETTINGS)
+@click.option(
+    "-t", "--token",
+    default="no-token", type=str,
+    help="Token for authentication against DMSS."
+)
+@click.option(
+    "-u", "--url",
+    default="http://localhost:8000", type=str,
+    help="URL to the Data Modelling Storage Service (DMSS)."
+)
+@click.pass_context
+def cli(context, token: str, url: str):
+    # Set the auth header
+    dmss_api.api_client.default_headers["Authorization"] = f"Bearer {token}"
+    # Set the DMSS host
+    dmss_api.api_client.configuration.host = url
+
+
+@cli.group("ds", help="Subcommand for working with data sources")
+@click.pass_context
+def ds_cli(context):
+    pass
+
+
+@ds_cli.command("import", help="Import a datasource, where <path> is the path to a data source definition (JSON).")
+@click.argument("path", required=True)
+@click.pass_context
+def import_data_source(context, path: str):
+    """
+    Import a single data source definition to DMSS
+    """
+    data_source_path = Path(path)
+    if not data_source_path.is_file():
+        raise FileNotFoundError(f"The path '{path}' is not a file.")
+
+    click.echo(f"IMPORTING DATA SOURCE '{data_source_path.name}'")
+
+    # Read the data source definition
+    with open(data_source_path) as file:
+        document = json.load(file)
+        try:
+            # Upload the data source definition to DMSS
+            dmss_api.data_source_save(document["name"], data_source_request=document)
+            click.echo(f"\tImported data source '{document['name']}'")
+        except (ApiException, KeyError) as error:
+            if error.status == 400:
+                click.echo(
+                    emoji.emojize(
+                        f"\t:warning: Could not import data source '{document['name']}'. "
+                        "A data source with that name already exists"
+                    )
+                )
+            else:
+                raise ImportError(f"\tFailed to import data source '{data_source_path.name}': {error}")
+
+
+@ds_cli.command("import-all", help="Import all datasources found in the directory given by 'path'.")
+@click.argument("path", required=True)
+@click.pass_context
+def import_data_sources(context, path: str):
+    """
+    Import all data source definitions to DMSS
+    """
+    data_sources_dir = Path(path)
+    if not data_sources_dir.is_dir():
+        raise FileNotFoundError(f"The path '{path}' is not a directory.")
+
+    click.echo("IMPORTING DATA SOURCES")
+
+    # List all data source definitions under <data_sources_dir>
+    data_sources = get_data_source_definition_files(data_sources_dir)
+    if not data_sources:
+        click.echo(
+            emoji.emojize(f"\t:warning: No data source definitions were found in '{data_sources_dir}'")
+        )
+
+    for filename in data_sources:
+        # Import the data source definition
+        filepath = data_sources_dir.joinpath(filename)
+        context.invoke(import_data_source, path=filepath)
+
+
+@ds_cli.command("reset", help="Reset the data source (deletes and reuploads packages).")
+@click.argument("data_source", required=True)
+@click.argument("path", required=False, default=".")
+@click.pass_context
+def reset_data_source(context, data_source: str, path: str):
+    """
+    Reset the data source by deleting and reuploading all packages
+    """
+    app_dir = Path(path)
+    if not app_dir.is_dir():
+        raise FileNotFoundError(f"The path '{path}' is not a directory.")
+
+    # Check for presence of expected directories, 'data_sources' and 'data'
+    data_sources_dir, data_dir = get_app_dir_structure(app_dir)
+
+    # Check for the data source definition file (json)
+    data_source_path = data_sources_dir.joinpath(f"{data_source}.{DATA_SOURCE_DEF_FILE_EXT}")
+    if not data_source_path.is_file():
+        raise FileNotFoundError(f"There is no data source definition for '{data_source}' in '{data_sources_dir}'.")
+    # Check for the data source data directory (contains packages)
+    data_source_data_dir = data_dir.joinpath(data_source)
+    if not data_source_data_dir.is_dir():
+        raise FileNotFoundError(f"There is no data source directory for '{data_source}' in '{data_dir}'.")
+
+    # Delete all packages in the data source
+    context.invoke(delete_packages, data_source=data_source, path=data_source_data_dir)
+    # Import all packages in the data source
+    context.invoke(init, path=path)
+
+
+@cli.group("pkg", help="Subcommand for working with packages")
+@click.pass_context
+def pkg_cli(context):
+    pass
+
+
+@pkg_cli.command("import", help="Import the package <path> to the given data source.")
+@click.argument("path", required=True)
+@click.argument("data_source", required=True)
+@click.pass_context
+def import_package(context, path: str, data_source: str):
+    """
+    Import the package <path> to the given data source
+    """
+    data_source_data_dir = Path(path)
+    if not data_source_data_dir.is_dir():
+        raise FileNotFoundError(f"The path '{path}' is not a directory.")
+
+    click.echo(f"IMPORTING PACKAGE '{data_source_data_dir.name}' TO '{data_source}'")
+
+    # Delete the package in DMSS
+    context.invoke(delete_package, data_source=data_source, package=data_source_data_dir.name, silent=True)
+
+    memory_file = io.BytesIO()
+    with ZipFile(memory_file, mode="w") as zip_file:
+        zip_all(
+            zip_file,
+            data_source_data_dir,
+            write_folder=True,
+        )
+    memory_file.seek(0)
+
+    try:
+        root_package = package_tree_from_zip(data_source, data_source_data_dir.name, memory_file)
+        # Import the package into the data source defined in _aliases_, or using the data_source folder name
+        # TODO: Fix aliasing
+        import_package_tree(root_package, data_source)
+        click.echo(f"\tImported package '{data_source}/{data_source_data_dir.name}'")
+    except ApplicationException as error:
+        raise ApplicationException(error.body)
+    except Exception as error:
+        traceback.print_exc()
+        raise Exception(f"\tSomething went wrong trying to upload the package '{data_source}/{data_source_data_dir.name}' to DMSS; {error}")
+
+
+@pkg_cli.command("import-all", help="Import all packages found in the directory given by <path> to the given data source")
+@click.argument("path", required=True)
+@click.argument("data_source", required=True)
+@click.pass_context
+def import_packages(context, path: str, data_source: str):
+    """
+    Import all packages found in the directory given by <path> to the given data source
+    """
+    data_source_data_dir = Path(path)
+    if not data_source_data_dir.is_dir():
+        raise FileNotFoundError(f"The path '{path}' is not a directory.")
+
+    click.echo(f"IMPORTING PACKAGES TO DATA SOURCE '{data_source}'")
+
+    # List all packages in the directory
+    packages_to_import = get_subdirectories(data_source_data_dir)
+    if not packages_to_import:
+        click.echo(
+            emoji.emojize(f"\t:warning: No packages were found in '{data_source_data_dir}'.")
+        )
+
+    def thread_function(package_name: str):
+        filepath = data_source_data_dir.joinpath(package_name)
+        context.invoke(import_package, data_source=data_source, path=filepath)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(thread_function, packages_to_import)
+
+
+@pkg_cli.command("delete", help="Delete the package <package> in the given data source.")
+@click.argument("data_source", required=True)
+@click.argument("package", required=True)
+@click.option("-s", "--silent", default=False, help="Whether to silence non-fatal output messages")
+@click.pass_context
+def delete_package(context, data_source: str, package: str, silent: bool = False):
+    """
+    Delete the package <package> in the given data source.
+    """
+    if not silent:
+        click.echo(f"DELETING PACKAGE '{data_source}/{package}'")
+
+    try:
+        # Delete the document in DMSS
+        dmss_api.document_remove_by_path(data_source, directory=package)
+        if not silent:
+            click.echo(f"\tDeleted package '{data_source}/{package}'")
+    except Exception as error:
+        if error.status == 404:
+            if not silent:
+                click.echo(emoji.emojize(f"\t:warning: The package '{data_source}/{package}' does not exist in DMSS"))
+        else:
+            raise error
+
+
+@pkg_cli.command("delete-all", help="Delete all packages found in the directory given by <path> from the given data source.")
+@click.argument("data_source", required=True)
+@click.argument("path", required=True)
+@click.pass_context
+def delete_packages(context, data_source: str, path: str):
+    """
+    Delete all packages found in the directory given by <path> from the given data source
+    """
+    data_source_data_dir = Path(path)
+    if not data_source_data_dir.is_dir():
+        raise FileNotFoundError(f"The path '{path}' is not a directory.")
+
+    click.echo(f"DELETING PACKAGES IN DATA SOURCE '{data_source}'")
+
+    # List all packages in the directory
+    packages = get_subdirectories(data_source_data_dir)
+    if not packages:
+        click.echo(
+            emoji.emojize(f"\t:warning: No packages were found in '{data_source_data_dir}'.")
+        )
+
+    def thread_function(package: str):
+        context.invoke(delete_package, data_source=data_source, package=package)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(thread_function, packages)
+
+
+@cli.command(help="Initialize the data sources and import all packages.")
+@click.argument("path", required=False, default=".")
+@click.pass_context
+def init(context, path: str):
+    """
+    Initialize the data sources and import all packages.
+    """
+    app_dir = Path(path)
+    if not app_dir.is_dir():
+        raise FileNotFoundError(f"The path '{path}' is not a directory.")
+
+    # Check for presence of expected directories, 'data_sources' and 'data'
+    data_sources_dir, data_dir = get_app_dir_structure(app_dir)
+
+    data_source_definitions = get_data_source_definition_files(data_sources_dir)
+    if not data_source_definitions:
+        click.echo(
+            emoji.emojize(f"\t:warning: No data source definitions were found in '{data_sources_dir}'.")
+        )
+    data_source_directories = get_subdirectories(data_dir)
+    if not data_source_directories:
+        click.echo(
+            emoji.emojize(f"\t:warning: No data source directories were found in '{data_dir}'.")
+        )
+
+    for data_source_definition_filename in data_source_definitions:
+        data_source_definition_filepath = Path(data_sources_dir).joinpath(data_source_definition_filename)
+        data_source_name = data_source_definition_filename.replace(f".{DATA_SOURCE_DEF_FILE_EXT}", "")
+
+        data_source_data_dir = data_dir.joinpath(data_source_name)
+        if not data_source_data_dir.is_dir():
+            click.echo(
+                emoji.emojize(f"\t:warning: No data source data directory was found by the name '{data_source_name}' in '{data_dir}'.")
+            )
+            continue
+
+        context.invoke(import_data_source, path=data_source_definition_filepath)
+        context.invoke(import_packages, path=data_source_data_dir, data_source=data_source_name)
+
+
+@cli.command(help="Reset all data sources (deletes and reuploads packages)")
+@click.argument("path", required=False, default=".")
+@click.pass_context
+def reset(context, path: str):
+    """
+    Reset all data sources (deletes and reuploads all packages)
+    """
+    app_dir = Path(path)
+    if not app_dir.is_dir():
+        raise FileNotFoundError(f"The path '{path}' is not a directory.")
+
+    # Check for presence of expected directories, 'data_sources' and 'data'
+    data_sources_dir, data_dir = get_app_dir_structure(app_dir)
+
+    data_source_definitions = get_data_source_definition_files(data_sources_dir)
+    if not data_source_definitions:
+        click.echo(
+            emoji.emojize(f"\t:warning: No data source definitions were found in '{data_sources_dir}'.")
+        )
+    data_source_directories = get_subdirectories(data_dir)
+    if not data_source_directories:
+        click.echo(
+            emoji.emojize(f"\t:warning: No data source directories were found in '{data_dir}'.")
+        )
+
+    for data_source_definition_filename in data_source_definitions:
+        data_source_definition_filepath = Path(data_sources_dir).joinpath(data_source_definition_filename)
+        data_source_name = data_source_definition_filename.replace(f".{DATA_SOURCE_DEF_FILE_EXT}", "")
+
+        data_source_data_dir = data_dir.joinpath(data_source_name)
+        if not data_source_data_dir.is_dir():
+            click.echo(
+                emoji.emojize(f"\t:warning: No data source data directory was found by the name '{data_source_name}' in '{data_dir}'.")
+            )
+            continue
+
+        context.invoke(
+            reset_data_source,
+            data_source=data_source_name,
+            path=path
+        )
+
+
+if __name__ == "__main__":
+    cli()
