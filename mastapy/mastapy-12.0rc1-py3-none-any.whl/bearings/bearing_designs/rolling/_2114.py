@@ -1,0 +1,27 @@
+﻿"""_2114.py
+
+MultiPointContactBallBearing
+"""
+
+
+from mastapy.bearings.bearing_designs.rolling import _2095
+from mastapy._internal.python_net import python_net_import
+
+_MULTI_POINT_CONTACT_BALL_BEARING = python_net_import('SMT.MastaAPI.Bearings.BearingDesigns.Rolling', 'MultiPointContactBallBearing')
+
+
+__docformat__ = 'restructuredtext en'
+__all__ = ('MultiPointContactBallBearing',)
+
+
+class MultiPointContactBallBearing(_2095.BallBearing):
+    """MultiPointContactBallBearing
+
+    This is a mastapy class.
+    """
+
+    TYPE = _MULTI_POINT_CONTACT_BALL_BEARING
+
+    def __init__(self, instance_to_wrap: 'MultiPointContactBallBearing.TYPE'):
+        super().__init__(instance_to_wrap)
+        self._freeze()
