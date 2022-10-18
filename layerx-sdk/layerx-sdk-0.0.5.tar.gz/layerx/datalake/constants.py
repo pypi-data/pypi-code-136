@@ -1,0 +1,16 @@
+# System Label Type
+LABEL_CLASS = 1
+LABEL_CLASS_WITH_ATTRIBUTES = 2
+
+# Annotation Geometric Type
+LINE_ANNOTATION = 'line'
+POLYGON_ANNOTATION = 'polygon'
+BOX_ANNOTATION = 'rectangle'
+
+# Operation Data Meta Updates
+OPERATION_TYPE_ANNOTATION = 1
+OPERATION_MODE_HUMAN = 1
+OPERATION_MODE_AUTO = 2
+
+# Request Batch Sizes
+META_UPDATE_REQUEST_BATCH_SIZE = 1000
