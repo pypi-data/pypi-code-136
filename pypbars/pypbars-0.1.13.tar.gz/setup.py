@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+#   -*- coding: utf-8 -*-
+
+from setuptools import setup
+from setuptools.command.install import install as _install
+
+class install(_install):
+    def pre_install_script(self):
+        pass
+
+    def post_install_script(self):
+        pass
+
+    def run(self):
+        self.pre_install_script()
+
+        _install.run(self)
+
+        self.post_install_script()
+
+if __name__ == '__main__':
+    setup(
+        name = 'pypbars',
+        version = '0.1.13',
+        description = 'Provides a convenient way to display progress bars for concurrent asyncio or multiprocessing Pool processes.',
+        long_description = '# pypbars\n[![build](https://github.com/soda480/pypbars/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/soda480/pypbars/actions/workflows/main.yml)\n[![Code Grade](https://api.codiga.io/project/34681/status/svg)](https://app.codiga.io/hub/project/34681/pypbars)\n[![coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)](https://pybuilder.io/)\n[![vulnerabilities](https://img.shields.io/badge/vulnerabilities-None-brightgreen)](https://pypi.org/project/bandit/)\n[![PyPI version](https://badge.fury.io/py/pypbars.svg)](https://badge.fury.io/py/pypbars)\n[![python](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-teal)](https://www.python.org/downloads/)\n\nThe `pypbars` module provides a convenient way to display progress bars for concurrent [asyncio](https://docs.python.org/3/library/asyncio.html) or [multiprocessing Pool](https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool) processes. The `pypbars` class is a subclass of [list2term](https://pypi.org/project/list2term/) that displays a list to the terminal, and uses [progress1bar](https://pypi.org/project/progress1bar/) to render the progress bar.\n\n### Installation\n```bash\npip install pypbars\n```\n\n#### [example1 - ProgressBars with asyncio](https://github.com/soda480/pypbars/blob/main/examples/example1.py)\n\nCreate `ProgressBars` using a lookup list containing unique values, these identifiers will be used to get the index of the appropriate `ProgressBar` to be updated. The convention is for the function to include `logger.write` calls containing the identifier and a message for when and how the respective progress bar should be updated. In this example the default `regex` dict is used but the caller can specify their own, so long as it contains regular expressions for how to detect when `total`, `count` and optional `alias` are set.\n\n<details><summary>Code</summary>\n\n```Python\nimport asyncio\nimport random\nfrom faker import Faker\nfrom pypbars import ProgressBars\n\nasync def do_work(worker, logger=None):\n    logger.write(f\'{worker}->worker is {worker}\')\n    total = random.randint(10, 65)\n    logger.write(f\'{worker}->processing total of {total} items\')\n    for count in range(total):\n        # mimic an IO-bound process\n        await asyncio.sleep(.1)\n        logger.write(f\'{worker}->processed {count}\')\n    return total\n\nasync def run(workers):\n    with ProgressBars(lookup=workers, show_prefix=False, show_fraction=False) as logger:\n        doers = (do_work(worker, logger=logger) for worker in workers)\n        return await asyncio.gather(*doers)\n\ndef main():\n    workers = [Faker().user_name() for _ in range(10)]\n    print(f\'Total of {len(workers)} workers working concurrently\')\n    results = asyncio.run(run(workers))\n    print(f\'The {len(workers)} workers processed a total of {sum(results)} items\')\n\nif __name__ == \'__main__\':\n    main()\n```\n\n</details>\n\n![example1](https://raw.githubusercontent.com/soda480/pypbars/main/docs/images/example1.gif)\n\n#### [example2 - ProgressBars with multiprocessing Pool](https://github.com/soda480/pypbars/blob/main/examples/example2.py)\n\nThis example demonstrates how `pypbars` can be used to display progress bars from processes executing in a [multiprocessing Pool](https://docs.python.org/3/library/multiprocessing.html#using-a-pool-of-workers). The `list2term.multiprocessing` module contains a `pool_map` method that fully abstracts the required multiprocessing constructs, you simply pass it the function to execute, an iterable containing the arguments to pass each process, and an instance of `ProgressBars`. The method will execute the functions asynchronously, update the progress bars accordingly and return a multiprocessing.pool.AsyncResult object. Each progress bar in the terminal represents a background worker process.\n\nIf you do not wish to use the abstraction, the `list2term.multiprocessing` module contains helper classes that facilitate communication between the worker processes and the main process; the `QueueManager` provide a way to create a `LinesQueue` queue which can be shared between different processes. Refer to [example2b](https://github.com/soda480/pypbars/blob/main/examples/example2b.py) for how the helper methods can be used. \n\n**Note** the function being executed must accept a `LinesQueue` object that is used to write messages via its `write` method, this is the mechanism for how messages are sent from the worker processes to the main process, it is the main process that is displaying the messages to the terminal. The messages must be written using the format `{identifier}->{message}`, where {identifier} is a string that uniquely identifies a process, defined via the lookup argument to `ProgressBars`.\n\n<details><summary>Code</summary>\n\n```Python\nimport time\nfrom pypbars import ProgressBars\nfrom list2term.multiprocessing import pool_map\nfrom list2term.multiprocessing import CONCURRENCY\n\ndef is_prime(num):\n    if num == 1:\n        return False\n    for i in range(2, num):\n        if (num % i) == 0:\n            return False\n    else:\n        return True\n\ndef count_primes(start, stop, logger):\n    workerid = f\'{start}:{stop}\'\n    logger.write(f\'{workerid}->worker is {workerid}\')\n    logger.write(f\'{workerid}->processing total of {stop - start} items\')\n    primes = 0\n    for number in range(start, stop):\n        if is_prime(number):\n            primes += 1\n        logger.write(f\'{workerid}->processed {number}\')\n    logger.write(f\'{workerid}->{workerid} processing complete\')\n    return primes\n\ndef main(number):\n    step = int(number / CONCURRENCY)\n    iterable = [(index, index + step) for index in range(0, number, step)]\n    lookup = [\':\'.join(map(str, item)) for item in iterable]\n    progress_bars = ProgressBars(lookup=lookup, show_prefix=False, show_fraction=False, use_color=True)\n    # print to screen with progress bars context\n    results = pool_map(count_primes, iterable, context=progress_bars)\n    # print to screen without progress bars context\n    # results = pool_map(count_primes, iterable)\n    # do not print to screen\n    # results = pool_map(count_primes, iterable, print_status=False)\n    return sum(results.get())\n\nif __name__ == \'__main__\':\n    start = time.perf_counter()\n    number = 50_000\n    result = main(number)\n    stop = time.perf_counter()\n    print(f"Finished in {round(stop - start, 2)} seconds\\nTotal number of primes between 0-{number}: {result}")\n```\n\n</details>\n\n![example2](https://raw.githubusercontent.com/soda480/pypbars/main/docs/images/example2.gif)\n\n#### [example3 - resettable ProgressBars with multiprocessing Pool and Queue](https://github.com/soda480/pypbars/blob/main/examples/example3.py)\n\nThis example demonstrates how `pypbars` can be used to display progress bars from a small set processes executing in a [multiprocessing Pool](https://docs.python.org/3/library/multiprocessing.html#using-a-pool-of-workers) working on large amount of data defined in a shared work Queue. The workers will pop off the work from work queue and process it until there is no more work left in the work Queue. Since the workers are working on multiple sets the ProgressBar is reset everytime a worker begins work on a new set.  The ProgressBar maintains the number of iterations it has completed.\n\n<details><summary>Code</summary>\n\n```Python\nimport time, random, logging\nfrom multiprocessing import Queue\nfrom queue import Empty\nimport names\nfrom faker import Faker\nfrom multiprocessing import Pool\nfrom multiprocessing import get_context\nfrom multiprocessing import cpu_count\nfrom list2term.multiprocessing import LinesQueue\nfrom list2term.multiprocessing import QueueManager\nfrom queue import Empty\nfrom pypbars import ProgressBars\nlogger = logging.getLogger(__name__)\n\ndef prepare_queue(queue):\n    for _ in range(55):\n        queue.put({\'total\': random.randint(100, 150)})\n\ndef do_work(worker_id, total, logger):\n    logger.write(f\'{worker_id}->worker is {names.get_full_name()}\')\n    logger.write(f\'{worker_id}->processing total of {total} items\')\n    for index in range(total):\n        # simulate work by sleeping\n        time.sleep(random.choice([.001, .003, .008]))\n        logger.write(f\'{worker_id}->processed {index}\')\n    return total\n\ndef run_q(worker_id, queue, logger):\n    result = 0\n    while True:\n        try:\n            total = queue.get(timeout=1)[\'total\']\n            result += do_work(worker_id, total, logger)\n            logger.write(f\'{worker_id}->reset\')\n        except Empty:\n            break\n    return result\n\ndef main(processes):\n    QueueManager.register(\'LinesQueue\', LinesQueue)\n    QueueManager.register(\'Queue\', Queue)\n    with QueueManager() as manager:\n        queue = manager.LinesQueue(ctx=get_context())\n        data_queue = manager.Queue()\n        prepare_queue(data_queue)\n        with Pool(processes) as pool:\n            print(f">> Adding {data_queue.qsize()} sets into a data queue that {processes} workers will work from until empty")\n            process_data = [(Faker().name(), data_queue, queue) for index in range(processes)]\n            results = pool.starmap_async(run_q, process_data)\n            lookup = [f\'{data[0]}\' for data in process_data]\n            with ProgressBars(lookup=lookup, show_prefix=False, show_fraction=False, use_color=True, show_duration=True, clear_alias=True) as lines:\n                while True:\n                    try:\n                        item = queue.get(timeout=.1)\n                        if item.endswith(\'->reset\'):\n                            index, message = lines.get_index_message(item)\n                            lines[index].reset(clear_alias=False)\n                        else:\n                            lines.write(item)\n                    except Empty:\n                        if results.ready():\n                            for index, _ in enumerate(lines):\n                                lines[index].complete = True\n                            break\n    return sum(results.get())\n\n\nif __name__ == \'__main__\':\n    processes = 3\n    results = main(processes)\n    print(f">> {processes} workers processed a total of {results} items")\n```\n\n</details>\n\n![example3](https://raw.githubusercontent.com/soda480/pypbars/main/docs/images/example3.gif)\n\n\n### Development\n\nClone the repository and ensure the latest version of Docker is installed on your development server.\n\nBuild the Docker image:\n```sh\ndocker image build \\\n-t \\\npypbars:latest .\n```\n\nRun the Docker container:\n```sh\ndocker container run \\\n--rm \\\n-it \\\n-v $PWD:/code \\\npypbars:latest \\\nbash\n```\n\nExecute the build:\n```sh\npyb -X\n```\n',
+        long_description_content_type = 'text/markdown',
+        classifiers = [
+            'Programming Language :: Python',
+            'Programming Language :: Python :: 3.7',
+            'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10'
+        ],
+        keywords = '',
+
+        author = 'Emilio Reyes',
+        author_email = 'soda480@gmail.com',
+        maintainer = '',
+        maintainer_email = '',
+
+        license = 'Apache License, Version 2.0',
+
+        url = 'https://github.com/soda480/pypbars',
+        project_urls = {},
+
+        scripts = [],
+        packages = ['pypbars'],
+        namespace_packages = [],
+        py_modules = [],
+        entry_points = {},
+        data_files = [],
+        package_data = {},
+        install_requires = [
+            'list2term~=0.1.5',
+            'progress1bar~=0.3.0'
+        ],
+        dependency_links = [],
+        zip_safe = True,
+        cmdclass = {'install': install},
+        python_requires = '',
+        obsoletes = [],
+    )
