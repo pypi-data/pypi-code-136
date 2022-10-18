@@ -1,0 +1,31 @@
+BASE_PATH = {
+    "base_uri": "https://ca.account.sony.com/api",
+    "profile_uri": "https://m.np.playstation.com/api/userProfile/v1/internal/users",
+    "account_uri": "https://dms.api.playstation.com/api",
+    "legacy_profile_uri": "https://us-prof.np.community.playstation.net/userProfile/v1/users",
+    "gaming_lounge": "https://m.np.playstation.com/api/gamingLoungeGroups/v1",
+    "group_messaging": "https://us-gmsg.np.community.playstation.net/groupMessaging/v1",
+    "universal_search": "https://m.np.playstation.com/api/search/v1/universalSearch",
+    "game_titles": "https://m.np.playstation.com/api/catalog/v2/titles",
+}
+
+API_PATH = {
+    "oauth_code": "/authz/v3/oauth/authorize",
+    "access_token": "/authz/v3/oauth/token",
+    "my_account": "/v1/devices/accounts/me",
+    "profiles": "/{account_id}/profiles",
+    "legacy_profile": "/{online_id}/profile2",
+    "friends_list": "/me/friends",
+    "friends_summary": "/me/friends/{account_id}/summary",
+    "available_to_play": "/me/friends/subscribing/availableToPlay",
+    "blocked_users": "/me/blocks",
+    "basic_presences": "/basicPresences",
+    "my_groups": "/members/me/groups",
+    "group_settings": "/groups/{group_id}",
+    "create_group": "/groups",
+    "group_members": "/members/me/groups/{group_id}",
+    "send_group_message": "/groups/{group_id}/threads/{group_id}/messages",
+    "conversation": "/members/me/groups/{group_id}/threads/{group_id}/messages",
+    "leave_group": "/groups/{group_id}/members/me",
+    "title_concept": "/{title_id}/concepts",
+}
