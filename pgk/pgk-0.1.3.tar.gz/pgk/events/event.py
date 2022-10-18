@@ -1,0 +1,6 @@
+class Event:
+    def init_process(self):
+        ...
+
+    def process(self, event):
+        ...

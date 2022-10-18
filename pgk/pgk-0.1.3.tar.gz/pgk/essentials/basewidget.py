@@ -1,0 +1,6 @@
+class BaseWidget:
+    def process(self):
+        ...
+
+    def render(self):
+        ...
