@@ -1,0 +1,1 @@
+from ccfit2.cli import *
