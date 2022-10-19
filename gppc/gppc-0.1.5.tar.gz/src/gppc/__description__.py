@@ -1,0 +1,5 @@
+"""DESCRIPTION"""
+__title__ = "gppc"
+__author__ = "moxxos"
+__copyright__ = "Copyright (C) 2022 moxxos"
+short_description = "Check OSRS Grand Exchange prices from the command line. Includes limited module functionality."
