@@ -1,0 +1,1 @@
+from .core import is_prime,is_prime2
