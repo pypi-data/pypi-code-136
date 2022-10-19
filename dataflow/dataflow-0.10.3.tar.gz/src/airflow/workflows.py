@@ -1,0 +1,2 @@
+class AirflowWF(Workflow):
+    pass
