@@ -1,0 +1,21 @@
+# -*- coding: UTF-8 -*-
+logger.info("Loading 16 objects to table contacts_companytype...")
+# fields: id, name, abbr
+loader.save(create_contacts_companytype(1,['Public Limited Company', 'Aktiengesellschaft', 'Société Anonyme'],['', 'AG', 'SA']))
+loader.save(create_contacts_companytype(2,['Limited Liability Company', 'Private Gesellschaft mit beschränkter Haft', 'Société Privée à Responsabilité Limitée'],['', 'PGmbH', 'SPRL']))
+loader.save(create_contacts_companytype(3,['One-person Private Limited Company', 'Einpersonengesellschaft mit beschränkter Haft', "Société d'Une Personne à Responsabilité Limitée"],['', 'EGmbH', 'SPRLU']))
+loader.save(create_contacts_companytype(4,['Cooperative Company with Limited Liability', 'Kooperative mit beschränkter Haft', 'Société Coopérative à Responsabilité Limitée'],['', '', 'SCRL']))
+loader.save(create_contacts_companytype(5,['Cooperative Company with Unlimited Liability', 'Kooperative mit unbeschränkter Haft', 'Société Coopérative à Responsabilité Illimitée'],['', '', 'SCRI']))
+loader.save(create_contacts_companytype(6,['General Partnership', '', 'Société en Nom Collectif'],['', '', 'SNC']))
+loader.save(create_contacts_companytype(7,['Limited Partnership', '', 'Société en Commandite Simple'],['', '', 'SCS']))
+loader.save(create_contacts_companytype(8,['Non-stock Corporation', 'Gesellschaft öffentlichen Rechts', 'Société de Droit Commun'],['', '', '']))
+loader.save(create_contacts_companytype(9,['Charity/Company established for social purposes', 'Vereinigung ohne Gewinnabsicht', 'Association sans But Lucratif'],['', 'V.o.G.', 'ASBL']))
+loader.save(create_contacts_companytype(10,['Cooperative Company', 'Genossenschaft', 'Société Coopérative'],['', '', 'SC']))
+loader.save(create_contacts_companytype(11,['Company', 'Firma', 'Société'],['', '', '']))
+loader.save(create_contacts_companytype(12,['Public service', 'Öffentlicher Dienst', 'Service Public'],['', '', '']))
+loader.save(create_contacts_companytype(13,['Ministry', 'Ministerium', 'Ministère'],['', '', '']))
+loader.save(create_contacts_companytype(14,['School', 'Schule', 'école'],['', '', '']))
+loader.save(create_contacts_companytype(15,['Freelancer', 'Freier Mitarbeiter', 'Travailleur libre'],['', '', '']))
+loader.save(create_contacts_companytype(16,['Sole proprietorship', 'Einzelunternehmen', 'Entreprise individuelle'],['', '', '']))
+
+loader.flush_deferred_objects()

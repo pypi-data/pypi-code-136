@@ -1,0 +1,20 @@
+# -*- coding: UTF-8 -*-
+logger.info("Loading 15 objects to table cal_recurrentevent...")
+# fields: id, start_date, start_time, end_date, end_time, name, user, every_unit, every, positions, monday, tuesday, wednesday, thursday, friday, saturday, sunday, max_events, event_type, description
+loader.save(create_cal_recurrentevent(1,date(2013,1,1),None,None,None,["New Year's Day", 'Neujahr', "Jour de l'an"],None,'Y',1,'',True,True,True,True,True,True,True,None,2,''))
+loader.save(create_cal_recurrentevent(2,date(2013,5,1),None,None,None,["International Workers' Day", 'Tag der Arbeit', 'Premier Mai'],None,'Y',1,'',True,True,True,True,True,True,True,None,2,''))
+loader.save(create_cal_recurrentevent(3,date(2013,7,21),None,None,None,['National Day', 'Nationalfeiertag', 'Fête nationale'],None,'Y',1,'',True,True,True,True,True,True,True,None,2,''))
+loader.save(create_cal_recurrentevent(4,date(2013,8,15),None,None,None,['Assumption of Mary', 'Mariä Himmelfahrt', 'Assomption de Marie'],None,'Y',1,'',True,True,True,True,True,True,True,None,2,''))
+loader.save(create_cal_recurrentevent(5,date(2013,10,31),None,None,None,["All Souls' Day", 'Allerseelen', 'Commémoration des fidèles défunts'],None,'Y',1,'',True,True,True,True,True,True,True,None,2,''))
+loader.save(create_cal_recurrentevent(6,date(2013,11,1),None,None,None,["All Saints' Day", 'Allerheiligen', 'Toussaint'],None,'Y',1,'',True,True,True,True,True,True,True,None,2,''))
+loader.save(create_cal_recurrentevent(7,date(2013,11,11),None,None,None,['Armistice with Germany', 'Waffenstillstand', 'Armistice'],None,'Y',1,'',True,True,True,True,True,True,True,None,2,''))
+loader.save(create_cal_recurrentevent(8,date(2013,12,25),None,None,None,['Christmas', 'Weihnachten', 'Noël'],None,'Y',1,'',True,True,True,True,True,True,True,None,2,''))
+loader.save(create_cal_recurrentevent(9,date(2013,3,31),None,None,None,['Easter sunday', 'Ostersonntag', 'Pâques'],None,'E',1,'',False,False,False,False,False,False,False,None,2,''))
+loader.save(create_cal_recurrentevent(10,date(2013,4,1),None,None,None,['Easter monday', 'Ostermontag', 'Lundi de Pâques'],None,'E',1,'',False,False,False,False,False,False,False,None,2,''))
+loader.save(create_cal_recurrentevent(11,date(2013,5,9),None,None,None,['Ascension of Jesus', 'Christi Himmelfahrt', 'Ascension'],None,'E',1,'',False,False,False,False,False,False,False,None,2,''))
+loader.save(create_cal_recurrentevent(12,date(2013,5,20),None,None,None,['Pentecost', 'Pfingsten', 'Pentecôte'],None,'E',1,'',False,False,False,False,False,False,False,None,2,''))
+loader.save(create_cal_recurrentevent(13,date(2013,3,29),None,None,None,['Good Friday', 'Karfreitag', 'Vendredi Saint'],None,'E',1,'',False,False,False,False,False,False,False,None,2,''))
+loader.save(create_cal_recurrentevent(14,date(2013,2,13),None,None,None,['Ash Wednesday', 'Aschermittwoch', 'Mercredi des Cendres'],None,'E',1,'',False,False,False,False,False,False,False,None,2,''))
+loader.save(create_cal_recurrentevent(15,date(2013,2,11),None,None,None,['Rosenmontag', 'Rosenmontag', 'Lundi de carnaval'],None,'E',1,'',False,False,False,False,False,False,False,None,2,''))
+
+loader.flush_deferred_objects()

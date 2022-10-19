@@ -1,0 +1,20 @@
+# -*- coding: UTF-8 -*-
+logger.info("Loading 15 objects to table phones_contactdetail...")
+# fields: id, start_date, end_date, detail_type, partner, value, remark, primary
+loader.save(create_phones_contactdetail(1,None,None,'040',100,'https://www.saffre-rumma.net/','',True))
+loader.save(create_phones_contactdetail(2,None,None,'040',181,'http://www.expresspost.ee/','',True))
+loader.save(create_phones_contactdetail(3,None,None,'040',182,'http://www.matsaluvv.ee','',True))
+loader.save(create_phones_contactdetail(4,None,None,'040',183,'http://www.energia.ee','',True))
+loader.save(create_phones_contactdetail(5,None,None,'040',184,'http://www.iizi.ee','',True))
+loader.save(create_phones_contactdetail(6,None,None,'040',185,'http://www.emta.ee','',True))
+loader.save(create_phones_contactdetail(7,None,None,'040',186,'http://www.ragnsells.ee','',True))
+loader.save(create_phones_contactdetail(8,None,None,'040',187,'https://www.electrabel.be','',True))
+loader.save(create_phones_contactdetail(9,None,None,'040',188,'http://www.ethias.be','',True))
+loader.save(create_phones_contactdetail(10,None,None,'040',189,'http://www.niederau.be','',True))
+loader.save(create_phones_contactdetail(11,None,None,'010',190,'info@leffin-electronics.be','',True))
+loader.save(create_phones_contactdetail(12,None,None,'010',112,'andreas@arens.com','',True))
+loader.save(create_phones_contactdetail(13,None,None,'030',112,'+32 87123456','',True))
+loader.save(create_phones_contactdetail(14,None,None,'010',113,'annette@arens.com','',True))
+loader.save(create_phones_contactdetail(15,None,None,'030',113,'+32 87123457','',True))
+
+loader.flush_deferred_objects()
