@@ -1,0 +1,2 @@
+from featuretools_sql.connector import DBConnector
+from featuretools_sql.version import __version__
