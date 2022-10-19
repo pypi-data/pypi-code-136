@@ -1,0 +1,16 @@
+rings_train_catalog = 'https://dl.dropboxusercontent.com/s/bxa7nti8gq8bjd7/rings_train_catalog.parquet'
+rings_test_catalog = 'https://dl.dropboxusercontent.com/s/76bc9mb9q1a1pft/rings_test_catalog.parquet'
+rings_images = 'https://dl.dropboxusercontent.com/s/4ax8h8yjq3nbxya/rings_images.tar.gz'
+
+legs_train_catalog = 'https://dl.dropboxusercontent.com/s/6dxquekzju7xfyq/legs_all_campaigns_ortho_dr8_only_train_catalog.parquet'
+legs_test_catalog = 'https://dl.dropboxusercontent.com/s/lrqzmaishpgpnpk/legs_all_campaigns_ortho_dr8_only_test_catalog.parquet'
+legs_unlabelled_catalog = 'https://dl.dropboxusercontent.com/s/uipqfl0ucovy83v/legs_all_campaigns_ortho_dr8_only_unlabelled_catalog.parquet'
+
+legs_chunk_00 = 'https://dl.dropboxusercontent.com/s/uo8lkxjy3t8zugj/low_z_jpg_chunk_00_archive.tar.gz'
+legs_chunk_01 = 'https://dl.dropboxusercontent.com/s/i9x3wtw9h7qy7jx/low_z_jpg_chunk_01_archive.tar.gz'
+legs_chunk_02 = 'https://dl.dropboxusercontent.com/s/y8xibdnonp76az9/low_z_jpg_chunk_02_archive.tar.gz'
+legs_chunk_03 = 'https://dl.dropboxusercontent.com/s/j8yuooyt52plrld/low_z_jpg_chunk_03_archive.tar.gz'
+legs_chunk_04 = 'https://dl.dropboxusercontent.com/s/yrgthkvtc3kerxc/low_z_jpg_chunk_04_archive.tar.gz'
+legs_chunk_05 = 'https://dl.dropboxusercontent.com/s/q9ukrsypfodmwyf/low_z_jpg_chunk_05_archive.tar.gz'
+legs_chunk_06 = 'https://dl.dropboxusercontent.com/s/vr9v69hmgsh7ios/low_z_jpg_chunk_06_archive.tar.gz'
+legs_chunk_07 = 'https://dl.dropboxusercontent.com/s/sp8jlfm41eup1bo/low_z_jpg_chunk_07_archive.tar.gz'
