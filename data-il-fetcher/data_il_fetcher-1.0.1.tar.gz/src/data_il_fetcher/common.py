@@ -1,0 +1,16 @@
+def get_std_headers(url):
+    return {'Connection': 'keep-alive',
+            'sec-ch-ua': '"Chromium";v="104", " Not A;Brand";v="99", "Google Chrome";v="104"',
+            'Accept': 'application/json, text/plain, */*',
+            'mainsite_version_commit': '3376126e2fad3570e3a7cd8102badd16e5644759',
+            'mobile-app': 'false',
+            'sec-ch-ua-mobile': '?0',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36',
+            'sec-ch-ua-platform': '"Linux"',
+            'Origin': url,
+            'Sec-Fetch-Site': 'same-site',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Dest': 'empty',
+            'Referer': url,
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'en-US,en;q=0.9'}
